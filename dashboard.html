@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Watchlist Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+    <div class="dashboard">
+        <header>
+            <h1>🎬 Movie Watchlist</h1>
+        </header>
+
+        <section class="stats">
+            <div class="card">
+                <h2 id="totalMovies">0</h2>
+                <p>Total Movies</p>
+            </div>
+            <div class="card">
+                <h2 id="watchedMovies">0</h2>
+                <p>Watched</p>
+            </div>
+            <div class="card">
+                <h2 id="pendingMovies">0</h2>
+                <p>Pending</p>
+            </div>
+        </section>
+
+        <section class="add-movie">
+            <input type="text" id="movieInput" placeholder="Enter movie name">
+            <button onclick="addMovie()">Add Movie</button>
+        </section>
+
+        <section>
+            <ul id="movieList"></ul>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
