@@ -1,0 +1,107 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    height: 100vh;
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)),
+                url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dashboard {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #820404;
+}
+
+.stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: #1e1e1e;
+    padding: 20px;
+    width: 30%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.815);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.card h2 {
+    color: #820404;
+    font-size: 32px;
+}
+
+.add-movie {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.add-movie input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+}
+
+.add-movie button {
+    padding: 12px 20px;
+    border: none;
+    background: #950606;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.add-movie button:hover {
+    background: #950606;
+}
+
+#movieList {
+    list-style: none;
+}
+
+#movieList li {
+    background: #1e1e1e;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.movie-actions button {
+    margin-left: 8px;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.watch-btn {
+    background: green;
+    color: white;
+}
+
+.delete-btn {
+    background: rgb(153, 4, 4);
+    color: white;
+}
