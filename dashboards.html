@@ -7,36 +7,113 @@
     <link rel="stylesheet" href="dashboards.css">
 </head>
 <body>
-    <div class="dashboard">
-        <header>
-            <h1>🎬 Movie Watchlist</h1>
-        </header>
 
-        <section class="stats">
-            <div class="card">
-                <h2 id="totalMovies">0</h2>
-                <p>Total Movies</p>
-            </div>
-            <div class="card">
-                <h2 id="watchedMovies">0</h2>
-                <p>Watched</p>
-            </div>
-            <div class="card">
-                <h2 id="pendingMovies">0</h2>
-                <p>Pending</p>
-            </div>
-        </section>
-
-        <section class="add-movie">
-            <input type="text" id="movieInput" placeholder="Enter movie name">
-            <button onclick="addMovie()">Add Movie</button>
-        </section>
-
-        <section>
-            <ul id="movieList"></ul>
-        </section>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M8 4v16M16 4v16M3 9h5M16 9h5M3 15h5M16 15h5" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Cinetrack</h1>
+        <span>YOUR FILM JOURNAL</span>
+      </div>
     </div>
 
-    <script src="script.js"></script>
+    <div class="stats">
+      <div class="stat"><b id="statLogged">10</b><small>LOGGED</small></div>
+      <div class="stat"><b id="statWatched">7</b><small>WATCHED</small></div>
+      <div class="stat"><b id="statToWatch">3</b><small>TO WATCH</small></div>
+      <div class="stat"><b id="statFav">3</b><small>FAVORITES</small></div>
+    </div>
+
+    <button class="add-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      Add Film
+    </button>
+  </header>
+
+  <div class="controls">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-filter="all">All Films <span class="count">10</span></button>
+      <button class="tab" data-filter="watchlist">Watchlist <span class="count">3</span></button>
+      <button class="tab" data-filter="watched">Watched <span class="count">4</span></button>
+      <button class="tab" data-filter="favorite">Favorites <span class="count">3</span></button>
+    </div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <input id="searchInput" type="text" placeholder="Search title, director, genre...">
+    </div>
+  </div>
+
+  <main class="grid" id="grid"></main>
+
+<script>
+const films = [
+  { title:"Inception", year:2010, director:"Christopher Nolan", genre:"SCI-FI", note:"Mind-bending architecture of dreams. The spinning top never lies.", status:"watched", art:"p1" },
+  { title:"The Godfather", year:1972, director:"Francis Ford Coppola", genre:"CRIME", note:"An offer I could not refuse. Perfect in every scene.", status:"favorite", art:"p2" },
+  { title:"Parasite", year:2019, director:"Bong Joon-ho", genre:"THRILLER", note:"Layers within layers. The stone metaphor.", status:"watched", art:"p3" },
+  { title:"Blade Runner 2049", year:2017, director:"Denis Villeneuve", genre:"SCI-FI", note:"Deakins at his absolute peak. The bee sequence.", status:"favorite", art:"p4" },
+  { title:"Mulholland Drive", year:2001, director:"David Lynch", genre:"MYSTERY", note:"Lynch at his most opaque. Need a clear evening.", status:"watchlist", art:"p5" },
+  { title:"There Will Be Blood", year:2007, director:"Paul Thomas Anderson", genre:"DRAMA", note:"Daniel Day-Lewis. 158 minutes of American myth.", status:"watchlist", art:"p6" },
+  { title:"The Shining", year:1980, director:"Stanley Kubrick", genre:"HORROR", note:"The Overlook never lets go. Rewatched for the score.", status:"watched", art:"p7" },
+  { title:"Melancholia", year:2011, director:"Lars von Trier", genre:"DRAMA", note:"The end of the world, slow and beautiful.", status:"favorite", art:"p8" },
+  { title:"Nosferatu", year:2024, director:"Robert Eggers", genre:"HORROR", note:"A shadow that grows heavier with every frame.", status:"watched", art:"p9" },
+  { title:"The Witch", year:2015, director:"Robert Eggers", genre:"HORROR", note:"Waiting for a quiet night in the woods.", status:"watchlist", art:"p10" },
+];
+
+const badgeIcons = {
+  watched: `<svg viewBox="0 0 24 24" fill="none"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>`,
+  favorite: `<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s-7.5-4.6-10-9.3C0.3 8.2 2 4.5 5.8 4c2.3-0.3 4.3 1 6.2 3.2C14 5 16 3.7 18.2 4c3.8 0.5 5.5 4.2 3.8 7.7C19.5 16.4 12 21 12 21z" stroke="currentColor" stroke-width="1.8"/></svg>`,
+  watchlist: `<svg viewBox="0 0 24 24" fill="none"><path d="M6 3h12v18l-6-4-6 4V3z" stroke="currentColor" stroke-width="1.8"/></svg>`
+};
+const badgeLabel = { watched:"WATCHED", favorite:"FAVORITE", watchlist:"WATCHLIST" };
+
+const grid = document.getElementById('grid');
+
+function render(filter = 'all', query = '') {
+  grid.innerHTML = '';
+  const q = query.trim().toLowerCase();
+  films
+    .filter(f => filter === 'all' ? true : f.status === filter)
+    .filter(f => !q || [f.title, f.director, f.genre].join(' ').toLowerCase().includes(q))
+    .forEach(f => {
+      const card = document.createElement('article');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="poster ${f.art}">
+          <div class="badge ${f.status}">${badgeIcons[f.status]}${badgeLabel[f.status]}</div>
+        </div>
+        <div class="meta">
+          <div class="title-row">
+            <h2>${f.title}</h2>
+            <span class="year">${f.year}</span>
+          </div>
+          <div class="director">${f.director}</div>
+          <div class="divider"></div>
+          <div class="genre">${f.genre}</div>
+          <div class="note">${f.note}</div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+}
+
+document.getElementById('tabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tab');
+  if (!btn) return;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  render(btn.dataset.filter, document.getElementById('searchInput').value);
+});
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  const active = document.querySelector('.tab.active').dataset.filter;
+  render(active, e.target.value);
+});
+
+render();
+</script>
 </body>
-</html>
