@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="dashboards.css" />
+  <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
   <div class="dashboard">
@@ -52,8 +52,9 @@
                 <polyline points="16 17 21 12 16 7"/>
                 <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
-              Logout
-            </button>
+              Logout<br>
+              Sign out 
+            </button> 
           </li>
         </ul>
       </div>
@@ -77,12 +78,12 @@
     <main class="grid" id="grid"></main>
   </div>
 
-  <div id="contextMenu" class="context-menu">
-    <button type="button" data-status="watchlist">Mark as Watchlist</button>
-    <button type="button" data-status="watched">Mark as Watched</button>
-    <button type="button" data-status="favorite">Mark as Favorite</button>
-    <button type="button" data-status="none">Clear Status</button>
-  </div>
+  <!-- Back to Top Button -->
+  <button id="backToTopBtn" class="back-to-top" title="Back to Top">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+  </button>
 
   <script>
     const films = [
@@ -113,16 +114,15 @@
     const grid = document.getElementById("grid");
     const searchInput = document.getElementById("searchInput");
     const tabs = document.getElementById("tabs");
-    const contextMenu = document.getElementById("contextMenu");
     const randomizeBtn = document.getElementById("randomizeBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const menuToggleBtn = document.getElementById("menuToggleBtn");
     const menuDropdown = document.getElementById("menuDropdown");
+    const backToTopBtn = document.getElementById("backToTopBtn");
 
     const state = {
       filter: "all",
-      query: "",
-      selectedFilmId: null
+      query: ""
     };
 
     function normalize(value) {
@@ -153,11 +153,23 @@
       const card = document.createElement("article");
       card.className = "card";
       card.dataset.id = film.id;
+
       card.innerHTML = `
         <div class="poster ${film.art}">
           <div class="badge ${film.status}">
             ${badgeIcons[film.status] || ''}
             ${badgeLabel[film.status] || ''}
+          </div>
+          <div class="hover-overlay">
+            <button type="button" class="action-btn ${film.status === 'watchlist' ? 'active' : ''}" data-status="watchlist">
+              ${badgeIcons.watchlist} + Watchlist
+            </button>
+            <button type="button" class="action-btn ${film.status === 'watched' ? 'active' : ''}" data-status="watched">
+              ${badgeIcons.watched} Watched
+            </button>
+            <button type="button" class="action-btn ${film.status === 'favorite' ? 'active' : ''}" data-status="favorite">
+              ${badgeIcons.favorite} Favorite
+            </button>
           </div>
         </div>
         <div class="meta">
@@ -168,14 +180,11 @@
           <div class="director">${film.director}</div>
           <div class="divider"></div>
           <div class="genre">${film.genre}</div>
-          <div class="note">${film.note}</div>
+          
+          <button type="button" class="toggle-desc-btn">Show Description</button>
+          <div class="note hidden">${film.note}</div>
         </div>
       `;
-
-      card.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        openContextMenu(e.pageX, e.pageY, film.id);
-      });
 
       return card;
     }
@@ -195,46 +204,11 @@
       grid.appendChild(fragment);
     }
 
-    function pickRandomFilm() {
-      const availableFilms = getFilteredFilms();
-      if (!availableFilms.length) return;
-
-      document.querySelectorAll(".card.highlighted").forEach(c => c.classList.remove("highlighted"));
-
-      const randomIndex = Math.floor(Math.random() * availableFilms.length);
-      const chosenFilm = availableFilms[randomIndex];
-
-      const cardEl = document.querySelector(`.card[data-id="${chosenFilm.id}"]`);
-      if (cardEl) {
-        cardEl.classList.add("highlighted");
-        cardEl.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }
-
     function setFilmStatus(id, status) {
       const film = films.find(f => f.id === id);
       if (!film) return;
-      film.status = status;
-      hideContextMenu();
+      film.status = film.status === status ? "none" : status;
       render();
-    }
-
-    function openContextMenu(x, y, filmId) {
-      state.selectedFilmId = filmId;
-      contextMenu.style.display = "block";
-
-      const menuWidth = 180;
-      const menuHeight = 120;
-      const maxX = window.innerWidth - menuWidth - 8;
-      const maxY = window.innerHeight - menuHeight - 8;
-
-      contextMenu.style.left = `${Math.min(x, maxX)}px`;
-      contextMenu.style.top = `${Math.min(y, maxY)}px`;
-    }
-
-    function hideContextMenu() {
-      contextMenu.style.display = "none";
-      state.selectedFilmId = null;
     }
 
     function toggleMenu() {
@@ -244,6 +218,24 @@
     function closeMenu() {
       menuDropdown.classList.remove("show");
     }
+
+    // Grid Event Delegation (Status update & Description toggle)
+    grid.addEventListener("click", (e) => {
+      const actionBtn = e.target.closest(".action-btn");
+      if (actionBtn) {
+        const card = actionBtn.closest(".card");
+        const filmId = parseInt(card.dataset.id, 10);
+        setFilmStatus(filmId, actionBtn.dataset.status);
+        return;
+      }
+
+      const descBtn = e.target.closest(".toggle-desc-btn");
+      if (descBtn) {
+        const noteEl = descBtn.nextElementSibling;
+        const isHidden = noteEl.classList.toggle("hidden");
+        descBtn.textContent = isHidden ? "Show Description" : "Hide Description";
+      }
+    });
 
     tabs.addEventListener("click", (e) => {
       const btn = e.target.closest(".tab");
@@ -266,7 +258,15 @@
     });
 
     randomizeBtn.addEventListener("click", () => {
-      pickRandomFilm();
+      const availableFilms = getFilteredFilms();
+      if (!availableFilms.length) return;
+      document.querySelectorAll(".card.highlighted").forEach(c => c.classList.remove("highlighted"));
+      const chosenFilm = availableFilms[Math.floor(Math.random() * availableFilms.length)];
+      const cardEl = document.querySelector(`.card[data-id="${chosenFilm.id}"]`);
+      if (cardEl) {
+        cardEl.classList.add("highlighted");
+        cardEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       closeMenu();
     });
 
@@ -274,26 +274,26 @@
       window.location.href = "login.html";
     });
 
-    contextMenu.addEventListener("click", (e) => {
-      const btn = e.target.closest("button[data-status]");
-      if (!btn || !state.selectedFilmId) return;
-      setFilmStatus(state.selectedFilmId, btn.dataset.status);
+    // Back to Top functionality
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 300) {
+        backToTopBtn.classList.add("visible");
+      } else {
+        backToTopBtn.classList.remove("visible");
+      }
+    });
+
+    backToTopBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     document.addEventListener("click", (e) => {
-      if (!e.target.closest("#contextMenu")) hideContextMenu();
       if (!e.target.closest(".menu-container")) closeMenu();
     });
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        hideContextMenu();
-        closeMenu();
-      }
+      if (e.key === "Escape") closeMenu();
     });
-
-    window.addEventListener("resize", hideContextMenu);
-    window.addEventListener("scroll", hideContextMenu);
 
     render();
   </script>
